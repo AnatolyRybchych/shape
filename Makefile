@@ -1,6 +1,6 @@
 CC      := gcc
 INCLUDE := -Iinclude
-LIBS    := -lSDL2
+LIBS    := -lSDL2 -lGL
 CARGS   := $(INCLUDE) -ggdb -Wall -Wextra -Werror -pedantic
 OUT     := run
 
