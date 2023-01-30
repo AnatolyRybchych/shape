@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "futil.h"
 #include "glutil.h"
@@ -52,12 +53,17 @@ bool is_shader_ok(GLuint shader){
     GLint status;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
-    return status == 0;
+    return status;
 }
 
 bool is_program_ok(GLuint program){
     GLint status;
     glGetShaderiv(program, GL_LINK_STATUS, &status);
 
-    return status == 0;
+    return status;
+}
+
+void get_program_info_log(GLuint program, char log[1024]){
+    memset(log, 0, sizeof(char[1024]));
+    glGetProgramInfoLog(program, 1023, NULL, log);
 }

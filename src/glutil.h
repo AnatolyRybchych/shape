@@ -14,4 +14,6 @@ GLuint build_program_from_files(const char *fragment_path, const char *vertex_pa
 bool is_shader_ok(GLuint shader);
 bool is_program_ok(GLuint program);
 
+void get_program_info_log(GLuint program, char log[1024]);
+
 #endif //GLUTIL_H_
