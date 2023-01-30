@@ -2,8 +2,8 @@
 #include <stdbool.h>
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
 
+#include "glutil.h"
 #include "panic.h"
 
 SDL_Window *window;
@@ -26,7 +26,7 @@ void on_winevent(const SDL_WindowEvent *ev){
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        
+
 
         SDL_GL_SwapWindow(window);
     }break;
@@ -45,6 +45,9 @@ int main(void){
     PANIC_NULL(glrc);
 
     SDL_GL_MakeCurrent(window, glrc);
+
+    GLenum glew_init_status = glewInit();
+    PANIC_FALSE(glew_init_status != GLEW_OK);
 
     SDL_ShowWindow(window);
 

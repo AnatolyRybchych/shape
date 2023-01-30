@@ -1,10 +1,12 @@
 CC      := gcc
 INCLUDE := -Iinclude
-LIBS    := -lSDL2 -lGL
+LIBS    := -lSDL2 -lGLEW -lGL
 CARGS   := $(INCLUDE) -ggdb -Wall -Wextra -Werror -pedantic
 OUT     := run
 
 objects += main.o
+objects += glutil.o
+objects += futil.o
 
 build: $(addprefix obj/, $(objects))
 	@mkdir -p $(dir ./$(OUT))

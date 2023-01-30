@@ -18,4 +18,11 @@
     }\
 } while(0)
 
+#define PANIC_FALSE(EXPRESSION) do{\
+    if(EXPRESSION){\
+        fprintf(stderr, "PANIC in %s:%i %s\n%s was false\n\n", __FILE__, __LINE__, __func__, __STRING(EXPRESSION));\
+        exit(-1);\
+    }\
+} while(0)
+
 #endif //PANIC_H_
