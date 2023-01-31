@@ -7,7 +7,11 @@ varying vec2 f_vpos;
 varying vec2 f_uvpos;
 
 void main(){
-    float shape_mask = texture2D(f_shape, f_uvpos).r * f_shape_power;
+    vec2 shape_nearest = texture2D(f_shape, f_uvpos).xy;
 
-    gl_FragColor = vec4(vec3(shape_mask), 1.0);
+    //contour with width of 5px
+    float shape_mask = (5.0 / f_shape_power - length(shape_nearest)) * f_shape_power;
+
+    gl_FragColor = vec4(1.0, 0.0, 0.0, shape_mask);
+    //gl_FragColor = vec4(shape_nearest, 0.0, 1.0);
 }

@@ -58,7 +58,7 @@ bool is_shader_ok(GLuint shader){
 
 bool is_program_ok(GLuint program){
     GLint status;
-    glGetShaderiv(program, GL_LINK_STATUS, &status);
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
 
     return status;
 }
