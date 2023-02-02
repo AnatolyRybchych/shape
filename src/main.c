@@ -11,11 +11,14 @@ SDL_Window *window;
 SDL_GLContext *glrc;
 int width, height;
 
-GLuint shape;
+GLuint shape1;
+GLuint shape2;
 
 GLuint prog;
 GLuint v_vpos_pos;
-GLuint f_shape_pos;
+GLuint f_shape1_pos;
+GLuint f_shape2_pos;
+GLuint f_time_pos;
 GLuint f_shape_power_pos;
 
 void render(void){
@@ -31,10 +34,15 @@ void render(void){
     glVertexAttribPointer(v_vpos_pos, 2, GL_FLOAT, GL_FALSE, 0, vertices);
 
     glUniform1f(f_shape_power_pos, height * 0.5);
+    glUniform1f(f_time_pos, SDL_GetTicks() * 0.001);
     
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, shape);
-    glUniform1i(f_shape_pos, 0);
+    glBindTexture(GL_TEXTURE_2D, shape1);
+    glUniform1i(f_shape1_pos, 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, shape2);
+    glUniform1i(f_shape1_pos, 1);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -57,14 +65,6 @@ void on_winevent(const SDL_WindowEvent *ev){
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         height = ev->data2;
     }break;
-    case SDL_WINDOWEVENT_EXPOSED:{
-        glClearColor(0, 0, 0, 0);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        render();
-
-        SDL_GL_SwapWindow(window);
-    }break;
     default: break;
     }
 }
@@ -78,7 +78,9 @@ void init_shader_program(void){
     }
 
     v_vpos_pos = glGetAttribLocation(prog, "v_vpos");
-    f_shape_pos = glGetUniformLocation(prog, "f_shape");
+    f_shape1_pos = glGetUniformLocation(prog, "f_shape1");
+    f_shape2_pos = glGetUniformLocation(prog, "f_shape2");
+    f_time_pos = glGetUniformLocation(prog, "f_time");
     f_shape_power_pos = glGetUniformLocation(prog, "f_shape_power");
 }
 
@@ -109,15 +111,23 @@ int main(void){
 
     Shape s;
     shape_init(&s, -0.5, 0.5);
-    Bezier b = {
+    shape_bezier(&s, &(Bezier){
         .to = {0.5, -0.5},
 
         .c1 = {-0.5, -0.5},
         .c2 = {0.5, 0.5},
-    };
+    });
+    shape1 = shape_create_contour_nearest_texture(&s, 64, 64);
+    shape_free(&s);
 
-    shape_bezier(&s, &b);
-    shape = shape_create_contour_nearest_texture(&s, 64, 64);
+    shape_init(&s, -0.8, 0.8);
+    shape_bezier(&s, &(Bezier){
+        .to = {0.8, -0.8},
+
+        .c1 = {-0.8, 0.8},
+        .c2 = {0.8, -0.8},
+    });
+    shape2 = shape_create_contour_nearest_texture(&s, 64, 64);
     shape_free(&s);
 
     init_shader_program();
@@ -126,12 +136,19 @@ int main(void){
 
     SDL_Event ev;
     while (true){
-        SDL_WaitEvent(&ev);
-        if(ev.type == SDL_WINDOWEVENT){
-            on_winevent(&ev.window);
+        if(SDL_PollEvent(&ev)){
+            if(ev.type == SDL_WINDOWEVENT){
+                on_winevent(&ev.window);
+            }
+            else{
+                on_event(&ev);
+            }
         }
         else{
-            on_event(&ev);
+            glClearColor(0, 0, 0, 0);
+            glClear(GL_COLOR_BUFFER_BIT);
+            render();
+            SDL_GL_SwapWindow(window);
         }
     }
     return 1;
