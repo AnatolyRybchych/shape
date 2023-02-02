@@ -3,27 +3,22 @@
 
 #include <stdint.h>
 #include "glutil.h"
+#include "bezier.h"
 
-typedef struct ShapeFragment ShapeFragment;
 typedef struct Shape Shape;
 
-void shape_init(Shape *shape, uint32_t width, uint32_t height);
+void shape_init(Shape *shape, float from_x, float from_y);
 void shape_free(Shape *shape);
 
-void shape_draw_circle(Shape *shape, float cx, float cy, float r);
+//returns true if target is inside of shape
+bool shape_get_nearest_to(Shape *shape, const float target[2], float result[2]);
 
-GLuint shape_create_texture(Shape *shape);
-
-struct ShapeFragment{
-    float x;
-    float y;
-};
+void shape_bezier(Shape *shape, const Bezier *bezier);
 
 struct Shape{
-    uint32_t width;
-    uint32_t height;
-
-    ShapeFragment *fragments;
+    float curve_start[2];
+    size_t curves_cnt;
+    Bezier *curves;
 };
 
 #endif //SHAPE_H_

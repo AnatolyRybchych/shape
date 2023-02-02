@@ -1,3 +1,5 @@
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <stdlib.h>
 #include <memory.h>
 
@@ -5,78 +7,106 @@
 #include "panic.h"
 #include "vec.h"
 
-void shape_init(Shape *shape, uint32_t width, uint32_t height){
+
+void shape_init(Shape *shape, float from_x, float from_y){
     PANIC_NULL(shape);
 
     memset(shape, 0, sizeof(*shape));
     *shape = (Shape){
-        .width = width,
-        .height = height,
-        .fragments = malloc(sizeof(ShapeFragment) * width * height)
+        .curve_start = {from_x, from_y},
+        .curves_cnt = 0,
+        .curves = NULL
     };
-
-    PANIC_NULL(shape->fragments);
-    for(size_t i = 0; i < shape->width * shape->height; i++){
-        shape->fragments[i] = (ShapeFragment){
-            .x = INFINITY,
-            .y = INFINITY,
-        };
-    }
 }
 
 void shape_free(Shape *shape){
-    if(shape->fragments){
-        free(shape->fragments);
+    PANIC_NULL(shape);
+    
+    if(shape->curves){
+        free(shape->curves);
     }
 
     memset(shape, 0, sizeof(*shape));
 }
 
-void shape_draw_circle(Shape *shape, float cx, float cy, float r){
+//currently is not optimized
+bool shape_get_nearest_to(Shape *shape, const float target[2], float result[2]){
+    //50 per curve, 
+    //TODO: maybe tyhere is a way to do it in constant time
+    //or it`s should be possible to avoid doing that mutch loops
+    #define GET_NEAREST_ON_BEZIER_STEP 0.02
     PANIC_NULL(shape);
+    PANIC_NULL(target);
+    PANIC_NULL(result);
 
-    for (uint32_t x = 0; x < shape->width; x++){
-        for (uint32_t y = 0; y < shape->height; y++){
-            float rel_x = (x / (float)shape->width) * 2.0 - 1.0;
-            float rel_y = (y / (float)shape->height) * 2.0 - 1.0;
+    //TODO: check if is target inside of shape
+    bool is_inside = false;
 
-            ShapeFragment *frag = &shape->fragments[y * shape->width + x];
+    result[0] = shape->curve_start[0];
+    result[1] = shape->curve_start[1];
+    float min_sqr_dst =  vec2_sqrdst(target, shape->curve_start);
 
-            float dcx = cx - rel_x;
-            float dcy = dstf(cy - rel_y, r);
-            float dc_len_sqr = dcx * dcx + dcy * dcy;
-            float dnearsest_len_sqr = dc_len_sqr - r;
-            
-            float dnearest_len_sqr = frag->x * frag->x + frag->y * frag->y;
+    float (*from)[2] = &shape->curve_start;
+    Bezier *curr = shape->curves;
+    Bezier *end = curr + shape->curves_cnt;
 
-            if(dnearsest_len_sqr <= dnearest_len_sqr){
-                float nearest[2] = {dcx, dcy};
-                vec2_eq_scale(nearest, dnearsest_len_sqr / dc_len_sqr);
+    while (curr != end){
+        for(float progress = 0.0; progress <= 1.0; progress += GET_NEAREST_ON_BEZIER_STEP){
+            float p[2];
+            bezier_point(p, *from, curr, progress);
 
-                frag->x = nearest[0];
-                frag->y = nearest[1];
+            float sqr_dst = vec2_sqrdst(p, target);
+            if(sqr_dst < min_sqr_dst){
+                min_sqr_dst = sqr_dst;
+                result[0] = p[0];
+                result[1] = p[1];
+            }
+        }
 
-                //printf("{%f;\t%f}\n", rel_x, rel_y);
+        from = &curr->to;
+        curr++;
+    }
+
+    if(shape->curves_cnt){
+        float (*p1)[2] = &shape->curve_start;
+        float (*p2)[2] = &shape->curves[shape->curves_cnt - 1].to;
+
+        float p1p2[2];
+        float p1target[2];
+        vec2_sub(p1p2, *p2, *p1);
+        vec2_sub(p1target, target, *p1);
+
+        float p1p2_sqrdst = vec2_sqrdst(*p1, *p2);
+        float dot = p1p2[0] * p1target[0] + p1p2[1] * p1target[1];
+
+        float normal_dst = dot / p1p2_sqrdst;
+
+        if(normal_dst > 0 && normal_dst < 0){
+            float nearest[2];
+            vec2_add(nearest, *p1, p1p2);
+            vec2_eq_scale(nearest, normal_dst); 
+
+            float sqrdst = vec2_sqrdst(nearest, target);
+            if(sqrdst < min_sqr_dst){
+                min_sqr_dst = sqrdst;
+                result[0] = nearest[0];
+                result[1] = nearest[1];
             }
         }
     }
+    
+    return is_inside;
 }
 
-GLuint shape_create_texture(Shape *shape){
+void shape_bezier(Shape *shape, const Bezier *bezier){
     PANIC_NULL(shape);
+    PANIC_NULL(bezier);
 
-    GLuint texture;
-    glGenTextures(1, &texture);
-    if(texture == 0){
-        PANIC("glGenTextures() returns 0");
+    shape->curves_cnt += 1;
+    shape->curves = realloc(shape->curves, shape->curves_cnt * sizeof(Bezier));
+    if(shape->curves == NULL){
+        PANIC("out of memory");
     }
 
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, shape->width, shape->height, 0, GL_RG, GL_FLOAT, shape->fragments);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    return texture;
+    shape->curves[shape->curves_cnt - 1] = *bezier;
 }

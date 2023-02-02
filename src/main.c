@@ -108,12 +108,21 @@ int main(void){
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     Shape s;
-    shape_init(&s, 64, 64);
-    shape_draw_circle(&s, 0.0, 0.0, 0.2);
-    // shape_draw_circle(&s, 0.1, 0.0, 0.2);
-    // shape_draw_circle(&s, 0.0, 0.1, 0.2);
-    // shape_draw_circle(&s, 0.2, 0.0, 0.2);
-    shape = shape_create_texture(&s);
+    shape_init(&s, -0.5, 0.5);
+    Bezier b = {
+        .to = {0.5, -0.5},
+
+        .c1 = {-0.5, -0.5},
+        .c2 = {0.5, 0.5},
+    };
+
+    shape_bezier(&s, &b);
+    
+    float nearest[2];
+    shape_get_nearest_to(&s, (float[2]){0.1, 0.2}, nearest);
+
+    printf("nearest: %f;\t%f\n", nearest[0], nearest[1]);
+
     shape_free(&s);
 
     init_shader_program();
