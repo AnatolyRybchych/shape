@@ -103,6 +103,9 @@ int main(void){
 
     SDL_GL_MakeCurrent(window, glrc);
 
+    //disable v-sync
+    SDL_GL_SetSwapInterval(0);
+
     GLenum glew_init_status = glewInit();
     PANIC_FALSE(glew_init_status != GLEW_OK);
 
@@ -135,6 +138,10 @@ int main(void){
     SDL_ShowWindow(window);
 
     SDL_Event ev;
+
+    //avarage for last 100 frames
+    Uint64 mstime = 0;
+    Uint64 frames = 0;
     while (true){
         if(SDL_PollEvent(&ev)){
             if(ev.type == SDL_WINDOWEVENT){
@@ -145,10 +152,25 @@ int main(void){
             }
         }
         else{
+            Uint32 msframetime = SDL_GetTicks();
+
             glClearColor(0, 0, 0, 0);
             glClear(GL_COLOR_BUFFER_BIT);
             render();
             SDL_GL_SwapWindow(window);
+
+            msframetime = SDL_GetTicks() - msframetime;
+            mstime += msframetime;
+            frames++;
+
+            //40_000 fps on GTX 1650 1920x1080 window, LOL
+            if(frames == 1000){
+                system("clear");
+                printf("fps:%f\n", 1000 / (mstime / (float)frames));
+
+                frames = 0;
+                mstime = 0;
+            }
         }
     }
     return 1;
