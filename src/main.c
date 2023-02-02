@@ -117,12 +117,7 @@ int main(void){
     };
 
     shape_bezier(&s, &b);
-    
-    float nearest[2];
-    shape_get_nearest_to(&s, (float[2]){0.1, 0.2}, nearest);
-
-    printf("nearest: %f;\t%f\n", nearest[0], nearest[1]);
-
+    shape = shape_create_contour_nearestdst_texture(&s, 100, 100);
     shape_free(&s);
 
     init_shader_program();

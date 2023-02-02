@@ -10,8 +10,18 @@ typedef struct Shape Shape;
 void shape_init(Shape *shape, float from_x, float from_y);
 void shape_free(Shape *shape);
 
-//returns true if target is inside of shape
-bool shape_get_nearest_to(Shape *shape, const float target[2], float result[2]);
+void shape_get_nearest_to(const Shape *shape, const float target[2], float result[2]);
+
+/// @brief returns opengl texture
+/// @param shape 
+/// @param width result texture width
+/// @param height result texture height
+/// @return opengl texture:
+/// MAG_FILTER is LINEAR;
+/// MIN_FILTER is LINEAR;
+/// internal format is GL_R32F
+/// each pixel of this texture contains distance to nearest point on shape contour
+GLuint shape_create_contour_nearestdst_texture(const Shape *shape, size_t width, size_t height);
 
 void shape_bezier(Shape *shape, const Bezier *bezier);
 

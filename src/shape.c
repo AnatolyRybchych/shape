@@ -29,8 +29,8 @@ void shape_free(Shape *shape){
     memset(shape, 0, sizeof(*shape));
 }
 
-//currently is not optimized
-bool shape_get_nearest_to(Shape *shape, const float target[2], float result[2]){
+//currently is not optimized and is not enugh accurate 
+void shape_get_nearest_to(const Shape *shape, const float target[2], float result[2]){
     //50 per curve, 
     //TODO: maybe tyhere is a way to do it in constant time
     //or it`s should be possible to avoid doing that mutch loops
@@ -39,14 +39,11 @@ bool shape_get_nearest_to(Shape *shape, const float target[2], float result[2]){
     PANIC_NULL(target);
     PANIC_NULL(result);
 
-    //TODO: check if is target inside of shape
-    bool is_inside = false;
-
     result[0] = shape->curve_start[0];
     result[1] = shape->curve_start[1];
     float min_sqr_dst =  vec2_sqrdst(target, shape->curve_start);
 
-    float (*from)[2] = &shape->curve_start;
+    const float (*from)[2] = &shape->curve_start;
     Bezier *curr = shape->curves;
     Bezier *end = curr + shape->curves_cnt;
 
@@ -63,12 +60,12 @@ bool shape_get_nearest_to(Shape *shape, const float target[2], float result[2]){
             }
         }
 
-        from = &curr->to;
+        from = (const float(*)[2])&curr->to;
         curr++;
     }
 
     if(shape->curves_cnt){
-        float (*p1)[2] = &shape->curve_start;
+        const float (*p1)[2] = &shape->curve_start;
         float (*p2)[2] = &shape->curves[shape->curves_cnt - 1].to;
 
         float p1p2[2];
@@ -94,9 +91,40 @@ bool shape_get_nearest_to(Shape *shape, const float target[2], float result[2]){
             }
         }
     }
-    
-    return is_inside;
 }
+
+GLuint shape_create_contour_nearestdst_texture(const Shape *shape, size_t width, size_t height){
+    PANIC_NULL(shape);
+
+    GLuint tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    float *pixels = malloc(sizeof(float) * width * height); 
+    for (size_t x = 0; x < width; x++){
+        for (size_t y = 0; y < height; y++){
+            float rel[2] = {
+                x / (float)width * 2.0 - 1.0, 
+                1.0 - y / (float)height * 2.0, 
+            };
+
+            float nearest[2];
+            shape_get_nearest_to(shape, rel, nearest);
+            pixels[y * width + x] = vec2_dst(nearest, rel);
+        }
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, pixels);
+    
+    free(pixels);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return tex;
+}
+
 
 void shape_bezier(Shape *shape, const Bezier *bezier){
     PANIC_NULL(shape);
