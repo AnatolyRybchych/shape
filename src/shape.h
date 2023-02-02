@@ -23,6 +23,8 @@ void shape_get_nearest_to(const Shape *shape, const float target[2], float resul
 /// each pixel of this texture contains distance to nearest point on shape contour
 GLuint shape_create_contour_nearestdst_texture(const Shape *shape, size_t width, size_t height);
 
+GLuint shape_create_contour_nearest_texture(const Shape *shape, size_t width, size_t height);
+
 void shape_bezier(Shape *shape, const Bezier *bezier);
 
 struct Shape{

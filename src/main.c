@@ -117,7 +117,7 @@ int main(void){
     };
 
     shape_bezier(&s, &b);
-    shape = shape_create_contour_nearestdst_texture(&s, 100, 100);
+    shape = shape_create_contour_nearest_texture(&s, 64, 64);
     shape_free(&s);
 
     init_shader_program();
