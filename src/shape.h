@@ -12,8 +12,8 @@ void shape_free(Shape *shape);
 
 void shape_get_nearest_to(const Shape *shape, const float target[2], float result[2]);
 
-/// @brief returns opengl texture
-/// @param shape 
+/// @brief returns opengl texture, each pixel of this texture contains distance to nearest point on shape contour
+/// @param shape shape
 /// @param width result texture width
 /// @param height result texture height
 /// @return opengl texture:
@@ -22,6 +22,13 @@ void shape_get_nearest_to(const Shape *shape, const float target[2], float resul
 /// internal format is GL_R32F
 /// each pixel of this texture contains distance to nearest point on shape contour
 GLuint shape_create_contour_nearestdst_texture(const Shape *shape, size_t width, size_t height);
+
+/// @brief returns array of float, that represents shape_create_contour_nearestdst_texture() data, required free()
+/// @param shape shape
+/// @param width result data image width array 
+/// @param height result data image height array
+/// @return float[width * height], required free()
+float *shape_create_contour_nearestdst_data(const Shape *shape, size_t width, size_t height);
 
 /// @brief returns opengl texture
 /// @param shape 
@@ -33,6 +40,13 @@ GLuint shape_create_contour_nearestdst_texture(const Shape *shape, size_t width,
 /// internal format is GL_RG32F
 /// each pixel of this texture contains nearest point on shape contour
 GLuint shape_create_contour_nearest_texture(const Shape *shape, size_t width, size_t height);
+
+/// @brief returns array of float, that represents shape_create_contour_nearest_texture() data, required free()
+/// @param shape shape
+/// @param width result data image width array 
+/// @param height result data image height array
+/// @return float[width * height * 2], required free()
+float *shape_create_contour_nearest_data(const Shape *shape, size_t width, size_t height);
 
 void shape_bezier(Shape *shape, const Bezier *bezier);
 

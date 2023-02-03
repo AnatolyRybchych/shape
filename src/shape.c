@@ -75,6 +75,15 @@ GLuint shape_create_contour_nearestdst_texture(const Shape *shape, size_t width,
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+    float *pixels = shape_create_contour_nearestdst_data(shape, width, height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, pixels);
+    free(pixels);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return tex;
+}
+
+float *shape_create_contour_nearestdst_data(const Shape *shape, size_t width, size_t height){
     float *pixels = malloc(sizeof(float) * width * height); 
     for (size_t x = 0; x < width; x++){
         for (size_t y = 0; y < height; y++){
@@ -89,12 +98,7 @@ GLuint shape_create_contour_nearestdst_texture(const Shape *shape, size_t width,
         }
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, pixels);
-    
-    free(pixels);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    return tex;
+    return pixels;
 }
 
 GLuint shape_create_contour_nearest_texture(const Shape *shape, size_t width, size_t height){
@@ -107,6 +111,15 @@ GLuint shape_create_contour_nearest_texture(const Shape *shape, size_t width, si
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+    float *pixels = shape_create_contour_nearest_data(shape, width, height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, width, height, 0, GL_RG, GL_FLOAT, pixels);
+    free(pixels);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return tex;
+}
+
+float *shape_create_contour_nearest_data(const Shape *shape, size_t width, size_t height){
     float (*pixels)[2] = malloc(sizeof(float[2]) * width * height); 
     for (size_t x = 0; x < width; x++){
         for (size_t y = 0; y < height; y++){
@@ -122,12 +135,7 @@ GLuint shape_create_contour_nearest_texture(const Shape *shape, size_t width, si
         }
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, width, height, 0, GL_RG, GL_FLOAT, pixels);
-    
-    free(pixels);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    return tex;
+    return &pixels[0][0];
 }
 
 
