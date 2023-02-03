@@ -48,6 +48,9 @@ GLuint shape_create_contour_nearest_texture(const Shape *shape, size_t width, si
 /// @return float[width * height * 2], required free()
 float *shape_create_contour_nearest_data(const Shape *shape, size_t width, size_t height);
 
+/// @brief follow bezier curve from last point
+/// @param shape shape
+/// @param bezier bezier curve parameters 
 void shape_bezier(Shape *shape, const Bezier *bezier);
 
 struct Shape{
