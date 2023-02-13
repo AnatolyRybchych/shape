@@ -103,8 +103,8 @@ int main(void){
 
     SDL_GL_MakeCurrent(window, glrc);
 
-    //disable v-sync
-    SDL_GL_SetSwapInterval(0);
+    // //disable v-sync
+    // SDL_GL_SetSwapInterval(0);
 
     GLenum glew_init_status = glewInit();
     PANIC_FALSE(glew_init_status != GLEW_OK);
@@ -112,26 +112,47 @@ int main(void){
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Shape s;
-    shape_init(&s, -0.5, 0.5);
-    shape_bezier(&s, &(Bezier){
-        .to = {0.5, -0.5},
+    ShapeHdr hdr;
 
-        .c1 = {-0.5, -0.5},
-        .c2 = {0.5, 0.5},
-    });
-    shape1 = shape_create_contour_nearest_texture(&s, 64, 64);
-    shape_free(&s);
+    FILE *f = fopen("circle1.shape", "r");
+    ShapeErr shape_status = shape_read_hdr(&hdr, f);
+    if(shape_status != SHAPEE_SUCCESS){
+        PANIC("cannot read hdr %u", shape_status);
+    }
+    float *data = malloc(sizeof(float) * hdr.width * hdr.height);
+    for(uint32_t i = 0; i < hdr.width * hdr.height; i++){
+        fread(data + i, sizeof(float), 1, f);
+    }
+    fclose(f);
 
-    shape_init(&s, -0.8, 0.8);
-    shape_bezier(&s, &(Bezier){
-        .to = {0.8, -0.8},
+    glGenTextures(1, &shape1);
+    glBindTexture(GL_TEXTURE_2D, shape1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, hdr.width, hdr.height, 0, GL_RED, GL_FLOAT, data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    free(data);
 
-        .c1 = {-0.8, 0.8},
-        .c2 = {0.8, -0.8},
-    });
-    shape2 = shape_create_contour_nearest_texture(&s, 64, 64);
-    shape_free(&s);
+    f = fopen("circle2.shape", "r");
+    shape_status = shape_read_hdr(&hdr, f);
+    if(shape_status != SHAPEE_SUCCESS){
+        PANIC("cannot read hdr %u", shape_status);
+    }
+    data = malloc(sizeof(float) * hdr.width * hdr.height);
+    for(uint32_t i = 0; i < hdr.width * hdr.height; i++){
+        fread(data + i, sizeof(float), 1, f);
+    }
+    fclose(f);
+
+    
+
+    glGenTextures(1, &shape2);
+    glBindTexture(GL_TEXTURE_2D, shape2);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, hdr.width, hdr.height, 0, GL_RED, GL_FLOAT, data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    free(data);
 
     init_shader_program();
 

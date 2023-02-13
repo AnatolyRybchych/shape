@@ -9,7 +9,6 @@ objects += glutil.o
 objects += futil.o
 objects += vec.o
 objects += shape.o
-objects += bezier.o
 
 build: $(addprefix obj/, $(objects))
 	@mkdir -p $(dir ./$(OUT))
